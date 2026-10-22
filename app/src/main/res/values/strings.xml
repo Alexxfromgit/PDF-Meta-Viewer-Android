@@ -1,6 +1,42 @@
 <resources>
-    <string name="app_name">PdfMetaViewerAndroid</string>
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
+<string name="app_name">PDF Meta Viewer</string>
+<string name="open_pdf">Open PDF</string>
+<string name="export_json">Export JSON</string>
+<string name="dark_mode">Dark</string>
+<string name="light_mode">Light</string>
+<string name="switch_dark">Switch to dark appearance</string>
+<string name="switch_light">Switch to light appearance</string>
+<string name="metadata">Metadata</string>
+<string name="metadata_count">Metadata · %1$d</string>
+<string name="text_preview">Text preview</string>
+<string name="search_metadata">Search metadata</string>
+<string name="sort_metadata">Sort metadata</string>
+<string name="select_visible">Select all</string>
+<string name="select_property">Select %1$s</string>
+<string name="copy_selected">Copy selected</string>
+<string name="copy_count">Copy (%1$d)</string>
+<string name="copied">Copied to clipboard</string>
+<string name="clipboard_failed">The system clipboard is unavailable. Try again.</string>
+<string name="no_matches">No matching metadata fields.</string>
+<string name="welcome_title">See what your PDF says about itself</string>
+<string name="welcome_description">Open a PDF to inspect its metadata, search its fields, preview text, and export JSON. Processing stays on your device.</string>
+<string name="working">Working</string>
+<string name="file_facts">%1$s · %2$s pages · %3$d fields</string>
+<string name="no_text">No extractable text was found in this document.</string>
+<string name="preview_truncated">Text preview limited to 2,000,000 characters for performance.</string>
+<string name="preview_characters">%1$d extracted characters</string>
+<string name="open_export">Open export</string>
+<string name="export_no_handler">The export was saved. No installed app can open JSON files.</string>
+<string name="single_pdf">Open one PDF at a time.</string>
+<string name="error_title">Could not complete that action</string>
+<string-array name="sort_options">
+<item>Property ↑</item><item>Property ↓</item><item>Value ↑</item><item>Value ↓</item>
+</string-array>
+<!-- Kept for the unused prototype fragments. -->
+<string name="title_home">Home</string>
+<string name="title_dashboard">Dashboard</string>
+<string name="title_notifications">Notifications</string>
+<string name="no_file_selected">No file selected…</string>
+<string name="read_meta">Read Meta</string>
+<string name="choose_pdf">Choose PDF</string>
 </resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:id="@+id/results" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:visibility="gone">
+<com.google.android.material.tabs.TabLayout android:id="@+id/result_tabs" android:saveEnabled="false" android:layout_width="match_parent" android:layout_height="wrap_content" app:tabMode="fixed">
+<com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/metadata"/>
+<com.google.android.material.tabs.TabItem android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/text_preview"/>
+</com.google.android.material.tabs.TabLayout>
+<LinearLayout android:id="@+id/metadata_panel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical">
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:paddingTop="8dp">
+<com.google.android.material.textfield.TextInputLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="@string/search_metadata" app:endIconMode="clear_text" style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+<com.google.android.material.textfield.TextInputEditText android:id="@+id/search" android:saveEnabled="false" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="text" android:singleLine="true" android:imeOptions="actionSearch"/>
+</com.google.android.material.textfield.TextInputLayout>
+<androidx.appcompat.widget.AppCompatSpinner android:id="@+id/sort" android:saveEnabled="false" android:layout_width="132dp" android:layout_height="56dp" android:entries="@array/sort_options" android:contentDescription="@string/sort_metadata" android:layout_marginStart="4dp"/>
+</LinearLayout>
+<LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+<com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/select_all" android:saveEnabled="false" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1" android:text="@string/select_visible"/>
+<com.google.android.material.button.MaterialButton android:id="@+id/copy_button" style="@style/Widget.Material3.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/copy_selected" android:enabled="false" android:minHeight="48dp"/>
+</LinearLayout>
+<TextView android:id="@+id/no_matches" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/no_matches" android:gravity="center" android:padding="12dp" android:visibility="gone"/>
+<androidx.recyclerview.widget.RecyclerView android:id="@+id/metadata_list" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:clipToPadding="false" android:contentDescription="@string/metadata"/>
+</LinearLayout>
+<LinearLayout android:id="@+id/text_panel" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="vertical" android:visibility="gone">
+<ScrollView android:id="@+id/text_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
+<TextView android:id="@+id/text_preview" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:textAppearance="?attr/textAppearanceBodyMedium" android:fontFamily="monospace" android:textIsSelectable="true" android:contentDescription="@string/text_preview"/>
+</ScrollView>
+<TextView android:id="@+id/preview_note" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="8dp" android:textAppearance="?attr/textAppearanceBodySmall"/>
+</LinearLayout>
+</LinearLayout>

@@ -1,169 +1,70 @@
-# PDF Meta Viewer — Android
+# PDF Meta Viewer for Android
 
-An Android application that extracts and exports metadata from PDF documents using **Apache Tika**, serializes the results to JSON via **Jackson**, and presents them through a clean MVVM-architected UI.
-
----
+Native Android counterpart of the Java desktop PDF Meta Viewer. Documents stay on the device; the app has no Internet or broad storage permission.
 
 ## Features
 
-- Parse any PDF file and extract all embedded metadata (author, title, creation date, content type, and more)
-- Optionally include the full document text content alongside the metadata
-- Export results as a structured JSON file to a configurable output path
-- Clean bottom-navigation UI with three tabs (Home, Dashboard, Notifications)
-- Reactive UI powered by LiveData — no manual view refreshes required
+- Open a PDF with the system document picker, an Android Open/Share action, or a one-file drag and drop.
+- Automatic background analysis with a loading indicator and explicit failures. Selecting a new PDF cancels the previous request and prevents stale results from replacing the new document.
+- Inspect document information, custom fields, XMP, PDF version, page count, encryption permissions, annotation types, font flags and text diagnostics.
+- Search property names and values literally, ignoring case; sort either property or value in either direction.
+- Select multiple fields, select all visible fields, and copy property/value pairs as tab-separated rows. Long-press a row to copy that field.
+- View and select extracted text, with the desktop's 2,000,000-character preview limit and truncation indicator.
+- Export pretty-printed UTF-8 JSON using Android's save dialog. Its create-document workflow handles existing-name conflicts without silently replacing the original PDF.
+- See the original document name, actual copied file size, page count and field count.
+- Switch light/dark appearance; the choice is remembered. Results, search, selection and the selected tab survive rotation and appearance changes.
+- Portrait and landscape layouts, system-inset/keyboard handling and accessible control labels.
 
----
+Keyboard: Ctrl/Command+O opens a PDF; Ctrl/Command+E exports JSON; Ctrl/Command+F focuses metadata search; Ctrl/Command+C copies selected metadata; Escape clears the search.
 
-## Architecture
+## JSON compatibility
 
-**MVVM + Repository pattern** with Android Navigation Component (single-activity, multi-fragment).
-
-```
-com.example.pdfmetaviewerandroid
-├── MainActivity                  # Single activity — hosts NavController + BottomNavigationView
-├── ui/
-│   ├── home/                     # HomeFragment + HomeViewModel (primary PDF interaction)
-│   ├── dashboard/                # DashboardFragment + DashboardViewModel
-│   └── notifications/            # NotificationsFragment + NotificationsViewModel
-├── extractor/
-│   └── PDFExtractor              # Apache Tika integration — parses PDF, returns metadata Map
-├── repository/
-│   ├── DocumentRepository        # Coordinates extraction and writes JSON to disk
-│   └── DocumentRecord            # Data model: id, metadata map, document text
-├── converters/
-│   └── ConvertJavaMapToJson      # Jackson-based Map → JSON string conversion
-└── utilities/
-    └── PdfMetaViewerConstants    # File paths and UI state strings
-```
-
-**Data flow:**
-
-```
-Fragment → ViewModel (LiveData) → DocumentRepository → PDFExtractor (Tika) → JSON file (Jackson)
-```
-
----
-
-## Tech Stack
-
-| Library | Version | Purpose |
-|---|---|---|
-| Apache Tika Core | 2.8.0 | PDF parsing engine |
-| Apache Tika Parsers Standard | 2.8.0 | Full format parser package |
-| Apache Tika XMP | 2.8.0 | XMP metadata support |
-| Jackson Databind | 2.15.2 | Map-to-JSON serialization |
-| SLF4J | 2.0.9 | Logging facade (required by Tika) |
-| log4j-to-slf4j | 2.21.0 | Logging bridge |
-| AndroidX Navigation | — | Fragment navigation |
-| AndroidX Lifecycle / LiveData / ViewModel | — | MVVM components |
-| View Binding | — | Type-safe view access |
-
----
-
-## Requirements
-
-- **Android SDK:** Min API 28 (Android 9.0 Pie), Target/Compile SDK 34
-- **Java:** Source and target compatibility Java 8
-- **Android Studio:** Hedgehog (2023.1.1) or newer recommended
-
----
-
-## Getting Started
-
-### Clone the repository
-
-```bash
-git clone https://github.com/your-username/PdfMetaViewerAndroid.git
-cd PdfMetaViewerAndroid
-```
-
-### Build and run
-
-Open the project in Android Studio and run on a device or emulator (API 28+), or use Gradle from the command line:
-
-```bash
-# Build debug APK
-./gradlew assembleDebug
-
-# Build release APK
-./gradlew assembleRelease
-
-# Clean build
-./gradlew clean assembleDebug
-```
-
-The debug APK is output to `app/build/outputs/apk/debug/`.
-
----
-
-## Usage
-
-1. Place a PDF file at the path defined by `PdfMetaViewerConstants.RESOURCES_EXAMPLE_PATH`  
-   (default: `src/main/res/Amazon-S3-Tutorial.pdf`).
-2. Run the app and navigate to the **Home** tab.
-3. Metadata is extracted and written as JSON to the path defined by `PdfMetaViewerConstants.RESOURCES_PATH`  
-   (default: `src/main/res/metadata.json`).
-4. To include the full document text in the output, pass `isContentIncluded = true` when calling  
-   `PDFExtractor.storeDocumentRecordAs(...)`.
-
-### Output format (example)
+The default export has the same envelope as the current desktop application:
 
 ```json
 {
-  "Content-Type": "application/pdf",
-  "Author": "Amazon Web Services",
-  "Creation-Date": "2021-06-15T10:30:00Z",
-  "dc:title": "Amazon S3 Tutorial",
-  "pdf:PDFVersion": "1.5",
-  "xmpTPg:NPages": "42"
+  "source": "example.pdf",
+  "metadata": {
+    "Content-Type": "application/pdf",
+    "dc:title": "Example"
+  }
 }
 ```
 
----
+Metadata values are strings and keys are sorted. Default exports exclude document text. The repository API can optionally include `content` and `contentTruncated` as proper JSON fields.
 
-## Testing
+Android uses PDFBox Android 2.0.27.0 because the desktop Tika/PDFBox dependencies are not Android-compatible. Canonical metadata and aliases are checked against a real export from desktop HEAD `2d771f3` (Tika 3.3.2), using the same bundled Amazon S3 PDF. Five extraction diagnostics are intentionally excluded from exact equality: the four glyph/count/ratio fields can differ between parser versions, and `pdf:ocrPageCount` is always `0` on Android. Android does not run desktop external OCR programs; image-only pages have no extractable text. Text whitespace can also differ between parsers. The fixture also exposes a desktop JempBox bug: it parses `2017-03-16T15:02+02:00` as `2017-03-17T11:02:00Z`. Android preserves the correct authored instant, `2017-03-16T13:02:00Z`, for the two affected XMP date fields; the test asserts those exact corrected values rather than reproducing the desktop bug.
 
-```bash
-# Run unit tests (JVM — no device needed)
-./gradlew test
+The XMP projection is namespace-aware, keeps multiple values, includes language alternatives and normalizes standard timestamps to UTC. Malformed, oversized or unsafe XMP produces a warning field while preserving the remaining document metadata. A PDF that requires a password returns a clear error, matching the desktop inspection workflow; password entry, editing and metadata scrubbing are outside this product's current desktop scope.
 
-# Run a single test class
-./gradlew test --tests "com.example.pdfmetaviewerandroid.ExampleUnitTest"
+Local filesystem compatibility exports use an atomic replacement where supported. Android document-provider streams cannot promise filesystem-level atomic moves; export JSON is fully serialized before the destination is opened, and a provider/write failure is reported as a failure.
 
-# Run instrumented tests (requires connected device or emulator)
-./gradlew connectedAndroidTest
+## Build and verification
 
-# Run lint checks
-./gradlew lint
+Requires JDK 17 and Android SDK 35. The Gradle wrapper pins Gradle 8.11.1 and AGP 8.9.0. Minimum Android version is 9 (API 28); target SDK remains 34.
+
+```sh
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
-**Test dependencies:** TestNG 7.8.0, AssertJ 3.24.2, Mockito 5.8.0, Espresso 3.5.1.
+APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
----
+Verified on 22 October 2026: debug APK build, 21 passing JVM regression tests, Android lint with zero errors, and two passing native workflow tests on Android 16 / API 36 (arm64).
 
-## Project Structure (files)
+Tests cover real-PDF metadata compatibility, export format and failures, immutable results, literal search, selection after sorting/filtering, repeated extraction, malformed/encrypted PDFs, preview bounds, XMP namespace handling/entity rejection, active-screen IO, rotation and read-error state. The desktop reference fixture lives at `app/src/test/resources/desktop-sample.json`.
 
-```
-PdfMetaViewerAndroid/
-├── app/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/example/pdfmetaviewerandroid/
-│   │   │   ├── res/
-│   │   │   │   ├── layout/          # Fragment and activity layouts
-│   │   │   │   ├── navigation/      # Navigation graph
-│   │   │   │   ├── menu/            # Bottom navigation menu
-│   │   │   │   └── values/          # Colors, strings, themes
-│   │   │   └── AndroidManifest.xml
-│   │   ├── test/                    # Unit tests
-│   │   └── androidTest/             # Instrumented tests
-│   └── build.gradle.kts
-├── build.gradle.kts
-├── settings.gradle.kts
-└── README.md
-```
+## Structure
 
----
+- `MainActivity`: native inspection screen and system document contracts.
+- `ui/ViewerViewModel`: background work, cancellation, retained results and export snapshots.
+- `ui/MetadataPresentation`: search, sorting and selection independently of Android widgets.
+- `extractor/PDFExtractor`: per-document parser state and bounded text extraction.
+- `extractor/XmpMetadata`: read-only XMP projection.
+- `repository/DocumentRecord`: immutable result.
+- `repository/DocumentRepository`: desktop-format JSON and export naming.
+- `utilities/FileUtils`: a unique, temporary local snapshot of a provider URI, preserving its original display name and cleaning it after analysis.
+
+The original prototype fragments and compatibility APIs remain in the tree, but are not part of the launch screen. PDF Hidden Info Android/iOS is a different product and is not a dependency or source of this implementation.
 
 ## License
 
