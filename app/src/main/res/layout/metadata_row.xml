@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="top" android:background="?attr/selectableItemBackground" android:paddingVertical="8dp" android:minHeight="56dp">
+<com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/row_selected" android:saveEnabled="false" android:layout_width="48dp" android:layout_height="48dp"/>
+<LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:paddingVertical="6dp" android:paddingEnd="12dp">
+<TextView android:id="@+id/row_property" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAppearance="?attr/textAppearanceLabelLarge" android:textColor="?attr/colorPrimary"/>
+<TextView android:id="@+id/row_value" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAppearance="?attr/textAppearanceBodyMedium" android:layout_marginTop="4dp"/>
+</LinearLayout>
+</LinearLayout>

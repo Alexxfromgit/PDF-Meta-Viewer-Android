@@ -1,68 +1,41 @@
-# CLAUDE.md
+# Project guidance
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Build and verification
 
-## Build Commands
+Requires JDK 17, Android SDK 35 and the checked-in Gradle 8.11.1 wrapper (AGP 8.9.0). Minimum SDK is 28; target SDK is 34.
 
-```bash
-# Build debug APK
-./gradlew assembleDebug
-
-# Build release APK
-./gradlew assembleRelease
-
-# Run unit tests (JVM, no device needed)
-./gradlew test
-
-# Run a single unit test class
-./gradlew test --tests "com.example.pdfmetaviewerandroid.ExampleUnitTest"
-
-# Run instrumented tests (requires connected device or emulator)
-./gradlew connectedAndroidTest
-
-# Lint
-./gradlew lint
-
-# Clean build
-./gradlew clean assembleDebug
+```sh
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+./gradlew :app:connectedDebugAndroidTest
 ```
+
+The second command requires an Android device or emulator. The debug APK is at `app/build/outputs/apk/debug/app-debug.apk`.
 
 ## Architecture
 
-**MVVM with Repository pattern**, using Android Navigation Component for a single-activity, multi-fragment UI.
+PDF Meta Viewer Android is a native counterpart of the Java desktop inspection workflow. PDF Hidden Info is a separate product.
 
-```
-com.example.pdfmetaviewerandroid
-├── MainActivity              # Single activity, hosts NavController + BottomNavigationView
-├── ui/                       # Three navigation destinations (bottom tabs)
-│   ├── home/                 # HomeFragment + HomeViewModel (main PDF interaction)
-│   ├── dashboard/            # DashboardFragment + DashboardViewModel
-│   └── notifications/        # NotificationsFragment + NotificationsViewModel
-├── extractor/
-│   └── PDFExtractor          # Apache Tika integration — parses PDF, returns metadata Map
-├── repository/
-│   ├── DocumentRepository    # Static utility: coordinates extraction + writes JSON to disk
-│   └── DocumentRecord        # Data model for a processed document
-├── converters/
-│   └── ConvertJavaMapToJson  # Jackson-based Map → JSON string conversion
-└── utilities/
-    ├── PdfMetaViewerConstants # File paths, UI state strings
-    └── LookAndFeelConstants   # Unused legacy Swing constants
-```
+- `MainActivity` owns the inspection screen, document-picker/save contracts, clipboard actions, appearance selection and keyboard shortcuts.
+- `ui/ViewerViewModel` retains results through recreation and runs all document-provider access, parsing and export work on background executors. A generation check rejects stale analysis results.
+- `ui/MetadataPresentation` handles literal case-insensitive search, property/value sorting and selection by metadata key. Sorting must never change which values get copied.
+- `extractor/PDFExtractor` creates parser state per document, reads PDF metadata through PDFBox Android, and bounds retained preview text at 2,000,000 characters.
+- `extractor/XmpMetadata` projects XMP by namespace, retains multiple values, rejects external entities and normalizes standard timestamps to UTC.
+- `repository/DocumentRecord` is immutable. `DocumentRepository` serializes desktop-compatible JSON through Jackson.
+- `utilities/FileUtils` snapshots provider URIs to unique cache files without losing their original display names, and deletes snapshots after analysis.
 
-**Data flow:** Fragment → ViewModel (LiveData) → DocumentRepository → PDFExtractor (Tika) → JSON file via Jackson.
+The portrait and landscape activity layouts share IDs. The launch screen resolves these views with `findViewById`; view binding remains enabled for the retained prototype fragments. Those fragments and the old navigation graph are not part of the active inspection workflow.
 
-## Key Dependencies
+## Constraints
 
-- **Apache Tika** (`tika-core`, `tika-parsers-standard-package`, `tika-xmp` 2.8.0): PDF metadata extraction
-- **Jackson** (`jackson-databind` 2.15.2): Map-to-JSON serialization
-- **SLF4J + log4j-to-slf4j**: Logging bridge (required by Tika)
-- **AndroidX Navigation** + **Lifecycle/ViewModel/LiveData**: UI architecture
-- **View Binding**: Enabled — use `binding.viewId` rather than `findViewById`
+- Keep all file/provider work off the UI thread. Parsing and exporting must survive activity recreation, and failures must never be reported as successful.
+- Snapshot the record before opening a save dialog so changing documents cannot change the export awaiting a destination.
+- Use Storage Access Framework grants rather than broad storage permissions. The app has no Internet permission.
+- Preserve the JSON envelope `{source, metadata}` and string-valued metadata. Optional text belongs inside `content` and `contentTruncated` fields, never appended after the JSON document.
+- Android provider streams cannot guarantee filesystem-level atomic replacement. Serialize JSON completely before opening a destination and propagate write failures.
+- Keep view-model-owned search, sort and selection state from being overwritten by restored widget state.
+- Keep build/dependency versions in `gradle/libs.versions.toml`. Do not add desktop Tika/PDFBox binaries, iText or duplicate dependency versions to this Android build.
+- The README documents parser differences: no external OCR on Android, possible glyph/whitespace differences, and the correct authored XMP dates where desktop JempBox misparses the sample's minutes-only timestamp form.
 
-## Important Notes
+## Regression coverage
 
-- Min SDK 28, target/compile SDK 34, Java 8 source/target compatibility.
-- `PdfMetaViewerConstants` defines the hardcoded resource paths used by the extractor (e.g., example PDF at `src/main/res/Amazon-S3-Tutorial.pdf`, output at `src/main/res/metadata.json`).
-- `LookAndFeelConstants` contains Swing look-and-feel strings carried over from a desktop predecessor — safe to ignore.
-- No custom ProGuard rules; minification is disabled in release builds.
+JVM tests cover the real bundled PDF against a desktop export, JSON formatting/failures, immutable records, search/sort/copy semantics, parser isolation, malformed/encrypted PDFs, preview bounds, XMP namespaces/entity rejection, background provider access and rotation. Native tests cover real Android parsing, widgets, recreation/theme changes, JSON streams and failure state. Keep the desktop fixture in `app/src/test/resources/desktop-sample.json` as a recorded baseline; do not silently rewrite it to make tests pass.
