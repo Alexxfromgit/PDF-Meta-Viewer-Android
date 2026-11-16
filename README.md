@@ -1,6 +1,6 @@
 # PDF Meta Viewer for Android
 
-Native Android counterpart of the Java desktop PDF Meta Viewer. Documents stay on the device; the app has no Internet or broad storage permission.
+Native Android companion to [PDF Meta Viewer](https://github.com/Alexxfromgit/PDF-Meta-Viewer). Documents stay on the device; the app has no Internet or broad storage permission.
 
 ## Features
 
@@ -41,6 +41,8 @@ Local filesystem compatibility exports use an atomic replacement where supported
 
 ## Build and verification
 
+Build the APK from this branch. GitHub Releases currently has no Android APK.
+
 Requires JDK 17 and Android SDK 35. The Gradle wrapper pins Gradle 8.11.1 and AGP 8.9.0. Minimum Android version is 9 (API 28); target SDK remains 34.
 
 ```sh
@@ -65,7 +67,3 @@ Tests cover real-PDF metadata compatibility, export format and failures, immutab
 - `utilities/FileUtils`: a unique, temporary local snapshot of a provider URI, preserving its original display name and cleaning it after analysis.
 
 The original prototype fragments and compatibility APIs remain in the tree, but are not part of the launch screen. PDF Hidden Info Android/iOS is a different product and is not a dependency or source of this implementation.
-
-## License
-
-This project is provided for educational and demonstration purposes.
