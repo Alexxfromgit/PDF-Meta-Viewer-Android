@@ -1,170 +1,29 @@
-# PDF Meta Viewer — Android
+# PDF Meta Viewer for Android
 
-An Android application that extracts and exports metadata from PDF documents using **Apache Tika**, serializes the results to JSON via **Jackson**, and presents them through a clean MVVM-architected UI.
+The Android companion to [PDF Meta Viewer](https://github.com/Alexxfromgit/PDF-Meta-Viewer) inspects PDF metadata and exports it as JSON. PDF processing runs on the device.
 
----
+## Project status
 
-## Features
+The `main` branch contains the original prototype. Its extraction and export code is separate from the navigation screens, and the prototype checkout lacks the Gradle files needed for a standalone build.
 
-- Parse any PDF file and extract all embedded metadata (author, title, creation date, content type, and more)
-- Optionally include the full document text content alongside the metadata
-- Export results as a structured JSON file to a configurable output path
-- Clean bottom-navigation UI with three tabs (Home, Dashboard, Notifications)
-- Reactive UI powered by LiveData — no manual view refreshes required
+The working inspection app is available on [`feature/android-desktop-parity`](https://github.com/Alexxfromgit/PDF-Meta-Viewer-Android/tree/feature/android-desktop-parity). It opens PDFs through Android’s document picker or Open/Share actions, searches and sorts metadata, previews extractable text, and saves JSON through the system save dialog. It uses PDFBox Android for extraction and writes the same `source` and `metadata` fields as the desktop app. [Follow the implementation in pull request #1](https://github.com/Alexxfromgit/PDF-Meta-Viewer-Android/pull/1).
 
----
+## Build the Android app
 
-## Architecture
+There is currently no published APK. Build the feature branch with JDK 17 and Android SDK Platform 35. It runs on Android 9 (API 28) and newer.
 
-**MVVM + Repository pattern** with Android Navigation Component (single-activity, multi-fragment).
-
-```
-com.example.pdfmetaviewerandroid
-├── MainActivity                  # Single activity — hosts NavController + BottomNavigationView
-├── ui/
-│   ├── home/                     # HomeFragment + HomeViewModel (primary PDF interaction)
-│   ├── dashboard/                # DashboardFragment + DashboardViewModel
-│   └── notifications/            # NotificationsFragment + NotificationsViewModel
-├── extractor/
-│   └── PDFExtractor              # Apache Tika integration — parses PDF, returns metadata Map
-├── repository/
-│   ├── DocumentRepository        # Coordinates extraction and writes JSON to disk
-│   └── DocumentRecord            # Data model: id, metadata map, document text
-├── converters/
-│   └── ConvertJavaMapToJson      # Jackson-based Map → JSON string conversion
-└── utilities/
-    └── PdfMetaViewerConstants    # File paths and UI state strings
+```sh
+git clone -b feature/android-desktop-parity https://github.com/Alexxfromgit/PDF-Meta-Viewer-Android.git
+cd PDF-Meta-Viewer-Android
+./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
 ```
 
-**Data flow:**
+Use `gradlew.bat` on Windows. The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. You can also open the checkout in Android Studio and run the `app` configuration on a device or emulator.
 
-```
-Fragment → ViewModel (LiveData) → DocumentRepository → PDFExtractor (Tika) → JSON file (Jackson)
-```
+## Use the app
 
----
+1. Open a PDF from the app or share a PDF to it from another Android app.
+2. Search the metadata by field or value, copy selected fields, or switch to the text preview.
+3. Export the metadata and choose a destination in Android’s save dialog.
 
-## Tech Stack
-
-| Library | Version | Purpose |
-|---|---|---|
-| Apache Tika Core | 2.8.0 | PDF parsing engine |
-| Apache Tika Parsers Standard | 2.8.0 | Full format parser package |
-| Apache Tika XMP | 2.8.0 | XMP metadata support |
-| Jackson Databind | 2.15.2 | Map-to-JSON serialization |
-| SLF4J | 2.0.9 | Logging facade (required by Tika) |
-| log4j-to-slf4j | 2.21.0 | Logging bridge |
-| AndroidX Navigation | — | Fragment navigation |
-| AndroidX Lifecycle / LiveData / ViewModel | — | MVVM components |
-| View Binding | — | Type-safe view access |
-
----
-
-## Requirements
-
-- **Android SDK:** Min API 28 (Android 9.0 Pie), Target/Compile SDK 34
-- **Java:** Source and target compatibility Java 8
-- **Android Studio:** Hedgehog (2023.1.1) or newer recommended
-
----
-
-## Getting Started
-
-### Clone the repository
-
-```bash
-git clone https://github.com/your-username/PdfMetaViewerAndroid.git
-cd PdfMetaViewerAndroid
-```
-
-### Build and run
-
-Open the project in Android Studio and run on a device or emulator (API 28+), or use Gradle from the command line:
-
-```bash
-# Build debug APK
-./gradlew assembleDebug
-
-# Build release APK
-./gradlew assembleRelease
-
-# Clean build
-./gradlew clean assembleDebug
-```
-
-The debug APK is output to `app/build/outputs/apk/debug/`.
-
----
-
-## Usage
-
-1. Place a PDF file at the path defined by `PdfMetaViewerConstants.RESOURCES_EXAMPLE_PATH`  
-   (default: `src/main/res/Amazon-S3-Tutorial.pdf`).
-2. Run the app and navigate to the **Home** tab.
-3. Metadata is extracted and written as JSON to the path defined by `PdfMetaViewerConstants.RESOURCES_PATH`  
-   (default: `src/main/res/metadata.json`).
-4. To include the full document text in the output, pass `isContentIncluded = true` when calling  
-   `PDFExtractor.storeDocumentRecordAs(...)`.
-
-### Output format (example)
-
-```json
-{
-  "Content-Type": "application/pdf",
-  "Author": "Amazon Web Services",
-  "Creation-Date": "2021-06-15T10:30:00Z",
-  "dc:title": "Amazon S3 Tutorial",
-  "pdf:PDFVersion": "1.5",
-  "xmpTPg:NPages": "42"
-}
-```
-
----
-
-## Testing
-
-```bash
-# Run unit tests (JVM — no device needed)
-./gradlew test
-
-# Run a single test class
-./gradlew test --tests "com.example.pdfmetaviewerandroid.ExampleUnitTest"
-
-# Run instrumented tests (requires connected device or emulator)
-./gradlew connectedAndroidTest
-
-# Run lint checks
-./gradlew lint
-```
-
-**Test dependencies:** TestNG 7.8.0, AssertJ 3.24.2, Mockito 5.8.0, Espresso 3.5.1.
-
----
-
-## Project Structure (files)
-
-```
-PdfMetaViewerAndroid/
-├── app/
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/example/pdfmetaviewerandroid/
-│   │   │   ├── res/
-│   │   │   │   ├── layout/          # Fragment and activity layouts
-│   │   │   │   ├── navigation/      # Navigation graph
-│   │   │   │   ├── menu/            # Bottom navigation menu
-│   │   │   │   └── values/          # Colors, strings, themes
-│   │   │   └── AndroidManifest.xml
-│   │   ├── test/                    # Unit tests
-│   │   └── androidTest/             # Instrumented tests
-│   └── build.gradle.kts
-├── build.gradle.kts
-├── settings.gradle.kts
-└── README.md
-```
-
----
-
-## License
-
-This project is provided for educational and demonstration purposes.
+The [feature branch README](https://github.com/Alexxfromgit/PDF-Meta-Viewer-Android/blob/feature/android-desktop-parity/README.md) describes keyboard shortcuts, export compatibility, and test coverage.
